@@ -48,7 +48,12 @@ func GetLastTelegramPrivateMessage(l *zap.SugaredLogger, client *http.Client, bo
 	if err != nil {
 		l.Error(err.Error())
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			l.Error(err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 
 	err = json.Unmarshal(body, &updates)
@@ -56,8 +61,13 @@ func GetLastTelegramPrivateMessage(l *zap.SugaredLogger, client *http.Client, bo
 		l.Fatal(err.Error())
 	}
 
-	updateId := updates.Updates[0].Update_id
-	data := updates.Updates[0].Message.Text
+	var updateId int
+	var data string
+
+	if len(updates.Updates) > 0 {
+		updateId = updates.Updates[0].Update_id
+		data = updates.Updates[0].Message.Text
+	}
 
 	return updateId, data
 }

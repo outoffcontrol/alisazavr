@@ -46,7 +46,10 @@ func SendYoutubeToStation(l *zap.SugaredLogger, message string, client *http.Cli
 		Device: device,
 	}
 	payloadBuf := new(bytes.Buffer)
-	json.NewEncoder(payloadBuf).Encode(body)
+	err := json.NewEncoder(payloadBuf).Encode(body)
+	if err != nil {
+		l.Error(err.Error())
+	}
 
 	req, err := http.NewRequest("POST", "https://yandex.ru/video/station", payloadBuf)
 	if err != nil {

@@ -29,7 +29,12 @@ func GetToken(l *zap.SugaredLogger, client *http.Client, login string, passwd st
 	if err != nil {
 		l.Fatal("Cannot get csrf token.", err.Error())
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			l.Fatal(err.Error())
+		}
+	}(resp.Body)
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		l.Fatal(err.Error())
